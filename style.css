@@ -1,0 +1,23 @@
+*{
+    margin: 0;
+    border: border-box;
+}
+.title-bar{
+    background-color: plum;
+    text-align: center;
+    line-height: 5rem;
+    height: 80px;
+}
+h1{
+    font-family: 'Courier New', Courier, monospace;
+}
+.books{
+    display: flex;
+    height: 150px;
+    width: 926.400px;
+    background-color: yellow;
+}
+.book-image{
+    height: 100px;
+    background-size:contain;
+}
