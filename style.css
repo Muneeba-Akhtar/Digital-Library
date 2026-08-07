@@ -42,9 +42,11 @@ p{
     font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }
 .view{
+    text-align: center;
     height: 50px;
-    width:100px;
+    width:150px;
     line-height: 3rem;
     color: black;
+    font-size: 19px;
     background-color:palegreen;
 }
