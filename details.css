@@ -1,0 +1,112 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background-color: #f7f1f7;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #222;
+}
+
+.details-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 30px 20px 60px;
+}
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 25px;
+    color: #222;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.details-card {
+    background: white;
+    padding: 35px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    text-align: center;
+}
+
+.big-cover {
+    display: block;
+    width: 300px;
+    max-width: 80%;
+    max-height: 480px;
+    object-fit: contain;
+    margin: 0 auto 30px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
+}
+
+.details-card h1 {
+    font-size: 38px;
+    margin-bottom: 15px;
+}
+
+.author,
+.genre {
+    font-size: 20px;
+    margin: 10px 0;
+}
+
+.blurb-section,
+.rating-section,
+.reading-section,
+.listing-section {
+    margin-top: 35px;
+    text-align: left;
+}
+
+.blurb-section h2,
+.rating-section h2,
+.reading-section h2,
+.listing-section h2 {
+    margin-bottom: 12px;
+}
+
+.blurb {
+    font-size: 18px;
+    line-height: 1.7;
+}
+
+.rating {
+    font-size: 22px;
+}
+
+.listings {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.listing,
+.action-link {
+    display: inline-block;
+    padding: 12px 18px;
+    background-color: palegreen;
+    color: black;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.status,
+.error {
+    font-size: 18px;
+    padding: 30px;
+}
+
+@media (max-width: 600px) {
+    .details-card {
+        padding: 20px;
+    }
+
+    .details-card h1 {
+        font-size: 28px;
+    }
+
+    .big-cover {
+        width: 240px;
+    }
+}
