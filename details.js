@@ -1,16 +1,104 @@
 /*
-    Loads one specific book from the Google Books API.
+    Digi-Library - Book Details
 
-    The homepage sends the book's Google Books volume ID like:
-    book-details.html?id=zyTCAlFPjgYC
+    Uses the same local book collection as the homepage.
+    This keeps the details page working even when Google Books
+    API is unavailable or rate-limited.
 */
 
-const API_URL = "https://www.googleapis.com/books/v1/volumes";
 const detailsContainer = document.getElementById("book-details");
 
 document.addEventListener("DOMContentLoaded", loadBookDetails);
 
-async function loadBookDetails() {
+
+const BOOKS = {
+    "pride-prejudice": {
+        title: "Pride and Prejudice",
+        authors: ["Jane Austen"],
+        genre: "Classic Fiction",
+        cover: "https://covers.openlibrary.org/b/isbn/9780141439518-L.jpg",
+        description:
+            "Pride and Prejudice is Jane Austen's celebrated novel about Elizabeth Bennet, Mr. Darcy, love, social expectations, and the misunderstandings that stand between people.",
+        rating: 4.5,
+        ratingsCount: 1200000,
+        onlineReading: false,
+        link: "https://www.gutenberg.org/ebooks/1342"
+    },
+
+    "great-gatsby": {
+        title: "The Great Gatsby",
+        authors: ["F. Scott Fitzgerald"],
+        genre: "Classic Fiction",
+        cover: "https://covers.openlibrary.org/b/isbn/9780743273565-L.jpg",
+        description:
+            "The Great Gatsby explores wealth, ambition, love, and the American Dream through the mysterious Jay Gatsby and his obsession with the past.",
+        rating: 4.2,
+        ratingsCount: 900000,
+        onlineReading: false,
+        link: "https://www.gutenberg.org/ebooks/64317"
+    },
+
+    "1984": {
+        title: "1984",
+        authors: ["George Orwell"],
+        genre: "Dystopian Fiction",
+        cover: "https://covers.openlibrary.org/b/isbn/9780451524935-L.jpg",
+        description:
+            "George Orwell's 1984 presents a dystopian society dominated by surveillance, propaganda, censorship, and the control of truth.",
+        rating: 4.4,
+        ratingsCount: 1100000,
+        onlineReading: false,
+        link: "https://www.gutenberg.org/ebooks/26184"
+    },
+
+    "jane-eyre": {
+        title: "Jane Eyre",
+        authors: ["Charlotte Brontë"],
+        genre: "Classic Fiction",
+        cover: "https://covers.openlibrary.org/b/isbn/9780141441146-L.jpg",
+        description:
+            "Jane Eyre follows an independent young woman as she searches for love, identity, independence, and a place in the world.",
+        rating: 4.5,
+        ratingsCount: 800000,
+        onlineReading: false,
+        link: "https://www.gutenberg.org/ebooks/1260"
+    },
+
+    "dorian-gray": {
+        title: "The Picture of Dorian Gray",
+        authors: ["Oscar Wilde"],
+        genre: "Gothic Fiction",
+        cover: "https://covers.openlibrary.org/b/isbn/9780141439570-L.jpg",
+        description:
+            "Oscar Wilde's novel follows Dorian Gray, whose portrait ages and records the consequences of his increasingly immoral life.",
+        rating: 4.2,
+        ratingsCount: 600000,
+        onlineReading: false,
+        link: "https://www.gutenberg.org/ebooks/174"
+    },
+
+    "little-women": {
+        title: "Little Women",
+        authors: ["Louisa May Alcott"],
+        genre: "Classic Fiction",
+        cover: "https://covers.openlibrary.org/b/isbn/9780147514011-L.jpg",
+        description:
+            "Little Women follows the four March sisters as they grow up, face challenges, discover love, and build lives of their own.",
+        rating: 4.5,
+        ratingsCount: 700000,
+        onlineReading: false,
+        link: "https://www.gutenberg.org/ebooks/37106"
+    }
+};
+
+
+function loadBookDetails() {
+
+    if (!detailsContainer) {
+        console.error('Could not find element with id="book-details".');
+        return;
+    }
+
     const params = new URLSearchParams(window.location.search);
     const bookId = params.get("id");
 
@@ -19,186 +107,152 @@ async function loadBookDetails() {
         return;
     }
 
-    try {
-        const response = await fetch(`${API_URL}/${encodeURIComponent(bookId)}`);
+    const book = BOOKS[bookId];
 
-        if (!response.ok) {
-            throw new Error(`API request failed: ${response.status}`);
-        }
-
-        const book = await response.json();
-        renderBookDetails(book);
-    } catch (error) {
-        console.error("Could not load book details:", error);
-        showError("We couldn't load this book. Please go back and try again.");
+    if (!book) {
+        showError("We couldn't find this book.");
+        return;
     }
+
+    renderBookDetails(book);
 }
 
-function renderBookDetails(book) {
-    const info = book.volumeInfo || {};
-    const sale = book.saleInfo || {};
-    const access = book.accessInfo || {};
 
-    const title = info.title || "Unknown title";
-    const authors = (info.authors || ["Unknown author"]).join(", ");
-    const genres = (info.categories || ["Genre not available"]).join(", ");
+function renderBookDetails(book) {
+
+    const title = book.title || "Unknown title";
+
+    const authors =
+        (book.authors || ["Unknown author"]).join(", ");
+
+    const genre =
+        book.genre || "Genre not available";
 
     const cover =
-        info.imageLinks?.large ||
-        info.imageLinks?.medium ||
-        info.imageLinks?.thumbnail ||
-        info.imageLinks?.smallThumbnail ||
+        book.cover ||
         "https://via.placeholder.com/300x450?text=No+Cover";
 
-    const description = cleanDescription(info.description);
-    const rating = formatRating(info.averageRating, info.ratingsCount);
+    const description =
+        book.description ||
+        "No description is available for this book.";
 
-    const onlineReading = getOnlineReadingStatus(access);
-    const listings = createListings(book, sale, access);
+    const rating =
+        book.rating
+            ? `⭐ ${book.rating.toFixed(1)} / 5`
+            : "No rating available.";
+
 
     detailsContainer.innerHTML = `
-        <img class="big-cover"
-             src="${escapeAttribute(cover.replace("http:", "https:"))}"
-             alt="Cover of ${escapeAttribute(title)}">
+
+        <img
+            class="big-cover"
+            src="${escapeAttribute(cover)}"
+            alt="Cover of ${escapeAttribute(title)}"
+        >
 
         <h1>${escapeHTML(title)}</h1>
 
-        <p class="author"><strong>Author:</strong> ${escapeHTML(authors)}</p>
-        <p class="genre"><strong>Genre:</strong> ${escapeHTML(genres)}</p>
+        <p class="author">
+            <strong>Author:</strong>
+            ${escapeHTML(authors)}
+        </p>
+
+        <p class="genre">
+            <strong>Genre:</strong>
+            ${escapeHTML(genre)}
+        </p>
+
 
         <section class="blurb-section">
             <h2>About the Book</h2>
-            <div class="blurb">${description}</div>
+
+            <div class="blurb">
+                <p>${escapeHTML(description)}</p>
+            </div>
         </section>
+
 
         <section class="rating-section">
             <h2>Rating</h2>
-            <p class="rating">${rating}</p>
+
+            <p class="rating">
+                ${rating}
+            </p>
         </section>
+
 
         <section class="reading-section">
             <h2>Read Online</h2>
-            <p>${onlineReading.text}</p>
-            ${onlineReading.link ? `
-                <a class="action-link"
-                   href="${escapeAttribute(onlineReading.link)}"
-                   target="_blank"
-                   rel="noopener noreferrer">
-                   Open Online Reader
-                </a>` : ""}
+
+            <p>
+                This book is available to read online.
+            </p>
+
+            <a
+                class="action-link"
+                href="${escapeAttribute(book.link)}"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                Open Online Reader
+            </a>
         </section>
+
 
         <section class="listing-section">
             <h2>Where to Find This Book</h2>
-            <div class="listings">${listings}</div>
+
+            <div class="listings">
+
+                <a
+                    class="listing"
+                    href="${escapeAttribute(book.link)}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    Project Gutenberg
+                </a>
+
+            </div>
         </section>
+
     `;
 
     document.title = `${title} | Digi-Library`;
 }
 
-function cleanDescription(description) {
-    if (!description) {
-        return `<p>No long description is available for this edition through the API.</p>`;
-    }
-
-    // Google Books descriptions sometimes contain HTML.
-    // We keep simple paragraph/line-break formatting but remove unsafe elements.
-    const temp = document.createElement("div");
-    temp.innerHTML = description;
-
-    temp.querySelectorAll("script, iframe, object, style").forEach(el => el.remove());
-
-    return temp.innerHTML;
-}
-
-function formatRating(averageRating, ratingsCount) {
-    if (!averageRating) {
-        return "No rating available.";
-    }
-
-    const countText = ratingsCount
-        ? ` (${ratingsCount.toLocaleString()} ratings)`
-        : "";
-
-    return `⭐ ${averageRating.toFixed(1)} / 5${countText}`;
-}
-
-function getOnlineReadingStatus(access) {
-    if (access.viewability === "ALL_PAGES" && access.webReaderLink) {
-        return {
-            text: "Yes — this book has a full online preview/reading option.",
-            link: access.webReaderLink
-        };
-    }
-
-    if (access.embeddable && access.webReaderLink) {
-        return {
-            text: "A preview is available online.",
-            link: access.webReaderLink
-        };
-    }
-
-    return {
-        text: "No free full-text reading option was reported by the API for this book."
-    };
-}
-
-function createListings(book, sale, access) {
-    const links = [];
-
-    // Google Books / preview link.
-    if (infoLink(book)) {
-        links.push({
-            name: "Google Books",
-            url: infoLink(book)
-        });
-    }
-
-    // Google Play purchase link, when Google Books supplies one.
-    if (sale.buyLink) {
-        links.push({
-            name: "Google Play / Buy",
-            url: sale.buyLink
-        });
-    }
-
-    // Publisher link, when supplied.
-    if (sale?.retailPrice && book.volumeInfo?.publisher) {
-        // We don't invent a publisher URL because the API doesn't necessarily provide one.
-    }
-
-    if (links.length === 0) {
-        return "<p>No retailer or catalogue links were supplied by the API for this book.</p>";
-    }
-
-    return links.map(link => `
-        <a class="listing"
-           href="${escapeAttribute(link.url)}"
-           target="_blank"
-           rel="noopener noreferrer">
-            ${escapeHTML(link.name)}
-        </a>
-    `).join("");
-}
-
-function infoLink(book) {
-    return book.volumeInfo?.infoLink || book.accessInfo?.webReaderLink || null;
-}
 
 function showError(message) {
+
     detailsContainer.innerHTML = `
-        <p class="error">${escapeHTML(message)}</p>
-        <a class="action-link" href="index.html">Return to Home</a>
+
+        <p class="error">
+            ${escapeHTML(message)}
+        </p>
+
+        <a
+            class="action-link"
+            href="index.html"
+        >
+            Return to Home
+        </a>
+
     `;
 }
 
+
 function escapeHTML(value) {
+
     const div = document.createElement("div");
+
     div.textContent = String(value ?? "");
+
     return div.innerHTML;
 }
 
+
 function escapeAttribute(value) {
-    return escapeHTML(value).replace(/"/g, "&quot;");
+
+    return escapeHTML(value)
+        .replace(/"/g, "&quot;");
 }
