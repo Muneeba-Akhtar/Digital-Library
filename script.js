@@ -14,82 +14,69 @@ const BOOK_QUERY = "harry potter";
 // Run when the HTML page has finished loading
 document.addEventListener("DOMContentLoaded", loadBooks);
 
-function loadBooks() {
+async function loadBooks() {
     const container = document.getElementById("books-container");
 
-    if (!container) {
-        console.error('Could not find #books-container');
-        return;
-    }
+    if (!container) return;
 
-    const books = [
-        {
-            id: "pride-prejudice",
-            volumeInfo: {
-                title: "Pride and Prejudice",
-                authors: ["Jane Austen"],
-                imageLinks: {
-                    thumbnail: "https://covers.openlibrary.org/b/isbn/9780141439518-M.jpg"
-                }
-            }
-        },
-        {
-            id: "great-gatsby",
-            volumeInfo: {
-                title: "The Great Gatsby",
-                authors: ["F. Scott Fitzgerald"],
-                imageLinks: {
-                    thumbnail: "https://covers.openlibrary.org/b/isbn/9780743273565-M.jpg"
-                }
-            }
-        },
-        {
-            id: "1984",
-            volumeInfo: {
-                title: "1984",
-                authors: ["George Orwell"],
-                imageLinks: {
-                    thumbnail: "https://covers.openlibrary.org/b/isbn/9780451524935-M.jpg"
-                }
-            }
-        },
-        {
-            id: "jane-eyre",
-            volumeInfo: {
-                title: "Jane Eyre",
-                authors: ["Charlotte Brontë"],
-                imageLinks: {
-                    thumbnail: "https://covers.openlibrary.org/b/isbn/9780141441146-M.jpg"
-                }
-            }
-        },
-        {
-            id: "dorian-gray",
-            volumeInfo: {
-                title: "The Picture of Dorian Gray",
-                authors: ["Oscar Wilde"],
-                imageLinks: {
-                    thumbnail: "https://covers.openlibrary.org/b/isbn/9780141439570-M.jpg"
-                }
-            }
-        },
-        {
-            id: "little-women",
-            volumeInfo: {
-                title: "Little Women",
-                authors: ["Louisa May Alcott"],
-                imageLinks: {
-                    thumbnail: "https://covers.openlibrary.org/b/isbn/9780147514011-M.jpg"
-                }
-            }
+    container.innerHTML = `
+    <div class="loading-books">
+        <div class="loader"></div>
+        <p>Finding your books...</p>
+    </div>
+`;
+
+    try {
+        const subjects = [
+            "fiction",
+            "romance",
+            "mystery",
+            "science",
+            "history",
+            "fantasy",
+            "technology",
+            "psychology"
+        ];
+
+        // Pick a random category every time the page loads
+        const subject = subjects[Math.floor(Math.random() * subjects.length)];
+
+        const response = await fetch(
+            `https://openlibrary.org/subjects/${subject}.json?limit=12`
+        );
+
+        if (!response.ok) {
+            throw new Error(`Failed to load books: ${response.status}`);
         }
-    ];
 
-    container.innerHTML = "";
+        const data = await response.json();
 
-    books.forEach(book => {
-        container.appendChild(createBookCard(book));
-    });
+        const books = (data.works || [])
+            .filter(book => book.title)
+            .map(book => ({
+                id: book.key,
+                volumeInfo: {
+                    title: book.title,
+                    authors: (book.authors || []).map(author => author.name),
+                    imageLinks: book.cover_id
+                        ? {
+                            thumbnail: `https://covers.openlibrary.org/b/id/${book.cover_id}-M.jpg`
+                        }
+                        : {}
+                }
+            }));
+
+        container.innerHTML = "";
+
+        books.forEach(book => {
+            container.appendChild(createBookCard(book));
+        });
+
+    } catch (error) {
+        console.error("Could not load books:", error);
+        container.innerHTML =
+            "<p>Sorry, the books could not be loaded. Please try again.</p>";
+    }
 }
 
 
@@ -182,6 +169,63 @@ function openDetails(bookId) {
         `book-details.html?id=${encodeURIComponent(bookId)}`,
         "_blank"
     );
+}
+const searchForm = document.getElementById("search-form");
+
+if (searchForm) {
+    searchForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const query = document.getElementById("site-search").value.trim();
+        const container = document.getElementById("books-container");
+
+        if (!query || !container) return;
+
+        container.innerHTML = "<p>Searching for books...</p>";
+
+        try {
+            const response = await fetch(
+                `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=12&fields=key,title,author_name,cover_i`
+            );
+
+            if (!response.ok) {
+                throw new Error(`Search failed: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            const books = data.docs
+                .filter(book => book.title)
+                .map(book => ({
+                    id: book.key,
+                    volumeInfo: {
+                        title: book.title,
+                        authors: book.author_name || ["Unknown author"],
+                        imageLinks: book.cover_i
+                            ? {
+                                thumbnail: `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
+                            }
+                            : {}
+                    }
+                }));
+
+            container.innerHTML = "";
+
+            if (books.length === 0) {
+                container.innerHTML = "<p>No books found. Try another search.</p>";
+                return;
+            }
+
+            books.forEach(book => {
+                container.appendChild(createBookCard(book));
+            });
+
+        } catch (error) {
+            console.error("Search error:", error);
+            container.innerHTML =
+                "<p>Sorry, we couldn't search for books. Please try again.</p>";
+        }
+    });
 }
 
 
