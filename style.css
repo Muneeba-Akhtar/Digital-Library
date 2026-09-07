@@ -12,6 +12,7 @@ button{
     font-size: 19px;
 }
 #site-search{
+    border-radius: 2.5%;
     height: 40px;
     width: 650px;
 }
@@ -23,6 +24,10 @@ button{
 }
 h1{
     font-family: 'Courier New', Courier, monospace;
+    font-size: 35px;
+    color: rgb(118, 53, 53);
+    text-shadow: 40 40 20% black;
+    font-style:oblique;
 }
 .books{
     justify-content: space-between;
@@ -46,8 +51,8 @@ h1{
     font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 .book-author{
-    width: 100px;
-    font-size: 30px;
+    width: 200px;
+    font-size: 25px;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 p{
@@ -82,4 +87,9 @@ p{
     to {
         transform: rotate(360deg);
     }
+}
+footer{
+    height: 200px;
+    background-color: bisque;
+    margin-top: 90px;
 }

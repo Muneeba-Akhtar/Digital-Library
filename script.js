@@ -19,12 +19,29 @@ async function loadBooks() {
 
     if (!container) return;
 
-    container.innerHTML = `
-    <div class="loading-books">
-        <div class="loader"></div>
-        <p>Finding your books...</p>
-    </div>
-`;
+    const cachedBooks = localStorage.getItem("digilibrary-books");
+
+    // Show previously loaded books immediately
+    if (cachedBooks) {
+        try {
+            const books = JSON.parse(cachedBooks);
+
+            container.innerHTML = "";
+
+            books.forEach(book => {
+                container.appendChild(createBookCard(book));
+            });
+        } catch (error) {
+            console.error("Could not read cached books:", error);
+        }
+    } else {
+        container.innerHTML = `
+            <div class="loading-books">
+                <div class="loader"></div>
+                <p>Finding your books...</p>
+            </div>
+        `;
+    }
 
     try {
         const subjects = [
@@ -38,11 +55,11 @@ async function loadBooks() {
             "psychology"
         ];
 
-        // Pick a random category every time the page loads
-        const subject = subjects[Math.floor(Math.random() * subjects.length)];
+        const subject =
+            subjects[Math.floor(Math.random() * subjects.length)];
 
         const response = await fetch(
-            `https://openlibrary.org/subjects/${subject}.json?limit=12`
+            `https://openlibrary.org/subjects/${subject}.json?limit=6`
         );
 
         if (!response.ok) {
@@ -60,12 +77,24 @@ async function loadBooks() {
                     authors: (book.authors || []).map(author => author.name),
                     imageLinks: book.cover_id
                         ? {
-                            thumbnail: `https://covers.openlibrary.org/b/id/${book.cover_id}-M.jpg`
+                            thumbnail:
+                                `https://covers.openlibrary.org/b/id/${book.cover_id}-M.jpg`
                         }
                         : {}
                 }
             }));
 
+        if (books.length === 0) {
+            throw new Error("No books found");
+        }
+
+        // Save the fresh books
+        localStorage.setItem(
+            "digilibrary-books",
+            JSON.stringify(books)
+        );
+
+        // Replace old books with fresh books
         container.innerHTML = "";
 
         books.forEach(book => {
@@ -73,12 +102,16 @@ async function loadBooks() {
         });
 
     } catch (error) {
-        console.error("Could not load books:", error);
-        container.innerHTML =
-            "<p>Sorry, the books could not be loaded. Please try again.</p>";
+        console.error("Could not load fresh books:", error);
+
+        // If fresh books fail but cached books exist,
+        // keep showing the cached books.
+        if (!cachedBooks) {
+            container.innerHTML =
+                "<p>Sorry, the books could not be loaded. Please try again.</p>";
+        }
     }
 }
-
 
 function createBookCard(book) {
     const info = book.volumeInfo;
